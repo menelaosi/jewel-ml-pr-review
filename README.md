@@ -37,6 +37,8 @@ See the unchecked lookup in [complete_the_look.py](services/recs_api/placements/
 `xhr.open('GET', endpoint, false)` makes the embedded widget perform a blocking request. From the [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/open#async):
 > Synchronous requests on the main thread can be easily disruptive to the user experience and should be avoided; in fact, many browsers have deprecated synchronous XHR support on the main thread entirely. Synchronous requests are permitted in [`Worker`](https://developer.mozilla.org/en-US/docs/Web/API/Worker)s.
 
+Pass `true` for the optional `async` parameter, or leave that parameter out entirely, to make the request asynchronous. Do not pass `false` explicitly. The response should then be handled from the request's completion callback rather than rendered before the data arrives.
+
 See the blocking request in [complete-the-look.ts](src/placements/complete-the-look.ts#L61).
 
 ### 5. The widget has no request or response error handling
@@ -94,4 +96,4 @@ See the hardcoded value in [jewel-loader.js](snippets/jewel-loader.js#L12).
 
 I used Claude Code to review the three files, identify issues, refine the wording, and format this document. My initial review caught most of the TypeScript concerns, including the synchronous XHR, unhandled response parsing, unsafe HTML interpolation, and browser-side email logging. Claude Code additionally surfaced the accumulating `popstate` listeners, the hardcoded `victorias-secret` integration ID, and the implications of using synchronous PyMongo calls inside an `async def` endpoint. It also helped clarify the missing-anchor failure and the need to validate and bound the query limit.
 
-I reviewed and edited each suggested finding rather than accepting the output unchanged. In particular, I kept the server-side `shopper_id` logging as a conditional privacy consideration rather than treating it as automatically unacceptable: it may be appropriate for operations when supported by the applicable privacy, retention, access-control, and consent requirements.
+I reviewed and edited each suggested finding rather than accepting the output unchanged. In particular, I kept the server-side `shopper_id` logging as a conditional privacy consideration, pushing back on treating it as automatically unacceptable: it may be appropriate for operations when supported by the applicable privacy, retention, access-control, and consent requirements. After pushing the changes, I also verified that the README renders correctly on GitHub.
