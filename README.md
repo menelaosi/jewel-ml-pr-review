@@ -94,8 +94,12 @@ See the hardcoded value in [jewel-loader.js](snippets/jewel-loader.js#L12).
 - The loader is small and self-contained: its immediately invoked function avoids leaking temporary variables into the global scope; see [lines 4-7](snippets/jewel-loader.js#L4-L7).
 - Waiting for the external script's `load` event before calling `mountCompleteTheLook` establishes the necessary script ordering. Deriving the SKU from the current path also keeps the snippet configuration light; see [lines 9-12](snippets/jewel-loader.js#L9-L12). The integration ID still needs to come from client-specific configuration, as noted above.
 
+## Walkthrough
+
+[Watch the video walkthrough of this review](https://drive.google.com/file/d/1S1b5HyYIhpFHdT2lHfnD-v2H41Pe5Imj/view?usp=sharing).
+
 ## AI disclosure
 
 I used Claude Code to review the three files, identify issues, refine the wording, and format this document. My initial review caught most of the TypeScript concerns, including the synchronous XHR, unhandled response parsing, unsafe HTML interpolation, and browser-side email logging. Claude Code additionally surfaced the accumulating `popstate` listeners, the hardcoded `victorias-secret` integration ID, and the implications of using synchronous PyMongo calls inside an `async def` endpoint. It also helped clarify the missing-anchor failure and the need to validate and bound the query limit.
 
-I reviewed and edited each suggested finding rather than accepting the output unchanged. In particular, I kept the server-side `shopper_id` logging as a conditional privacy consideration, pushing back on treating it as automatically unacceptable: it may be appropriate for operations when supported by the applicable privacy, retention, access-control, and consent requirements. After pushing the changes, I also verified that the README renders correctly on GitHub. I also caught a few places where it moved something to the wrong part of the README and fixed that up before sending this out.
+I reviewed and edited each suggested finding rather than accepting the output unchanged. In particular, I kept the server-side `shopper_id` logging as a conditional privacy consideration, pushing back on treating it as automatically unacceptable: it may be appropriate for operations when supported by the applicable privacy, retention, access-control, and consent requirements. After pushing the changes, I also verified that the README renders correctly on GitHub. I also caught a few places where it moved something to the wrong part of the README and fixed that up before sending this out.gi
