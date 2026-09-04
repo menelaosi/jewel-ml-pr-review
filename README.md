@@ -8,7 +8,7 @@ These files contain security and privacy risks, along with latency issues caused
 
 ## Findings
 
-## Python endpoint: [complete_the_look.py](services/recs_api/placements/complete_the_look.py)
+### Python endpoint: [complete_the_look.py](services/recs_api/placements/complete_the_look.py)
 
 ### 1. Synchronous MongoDB calls block the async endpoint
 
@@ -30,7 +30,7 @@ The API assumes that `catalog.find_one()` always returns a document, then access
 
 See the unchecked lookup in [complete_the_look.py](services/recs_api/placements/complete_the_look.py#L23) and the failing access in [complete_the_look.py](services/recs_api/placements/complete_the_look.py#L25).
 
-## TypeScript widget: [complete-the-look.ts](src/placements/complete-the-look.ts)
+### TypeScript widget: [complete-the-look.ts](src/placements/complete-the-look.ts)
 
 ### 4. Synchronous XHR blocks the host page
 
@@ -55,7 +55,7 @@ See the interpolation in [complete-the-look.ts](src/placements/complete-the-look
 
 ### 7. `shopperEmail` is logged in the browser
 
-The widget logs `shopperEmail` unconditionally. Shopper email is PII and should not be sent to the browser console, especially in a widget embedded on third-party storefronts.
+The widget logs `shopperEmail` unconditionally. Shopper email is PII and should not be sent to the browser console, especially in a widget embedded on third-party storefronts. More generally, `console.log` should be avoided in production. If this information is needed for diagnostics, it should be handled through server-side logging, as in the Python endpoint; even there, `shopper_id` should be sufficient without also logging the email.
 
 See the log payload in [complete-the-look.ts](src/placements/complete-the-look.ts#L84).
 
@@ -65,7 +65,7 @@ Every call to `mountCompleteTheLook` adds a new `popstate` listener. Because the
 
 See the listener registration in [complete-the-look.ts](src/placements/complete-the-look.ts#L53).
 
-## Loader snippet: [jewel-loader.js](snippets/jewel-loader.js)
+### Loader snippet: [jewel-loader.js](snippets/jewel-loader.js)
 
 ### 9. The generic loader hardcodes a client integration ID
 
@@ -83,12 +83,14 @@ See the hardcoded value in [jewel-loader.js](snippets/jewel-loader.js#L12).
 
 ### TypeScript widget: [complete-the-look.ts](src/placements/complete-the-look.ts)
 
-- The no-framework, vanilla-JavaScript approach is appropriate for an embedded bundle with an explicit bundle-size constraint on the client's critical path. The widget also keeps its expected item shape close to the rendering code through the `CatalogItem` interface; see [lines 34-41](src/placements/complete-the-look.ts#L34-L41).
+- The widget keeps its expected item shape close to the rendering code through the `CatalogItem` interface; see [lines 34-41](src/placements/complete-the-look.ts#L34-L41). The image and price properties could move to separate interfaces if they are reused elsewhere, but the current structure is reasonable for this file.
 - Creating the style element in code makes the widget self-contained and avoids requiring a separate stylesheet request. Keeping styles near the component is reasonable for a small bundle, although the generic `img`, `h3`, and `p` selectors should eventually be scoped to the widget so they cannot affect the host page; see [lines 4-30](src/placements/complete-the-look.ts#L4-L30) and [lines 48-50](src/placements/complete-the-look.ts#L48-L50).
 - The widget renders a compact horizontal product layout and includes useful product, image, price, and SKU data in each item. The rendering contract is easy to identify in [lines 66-77](src/placements/complete-the-look.ts#L66-L77), subject to the escaping and error-handling fixes noted above.
+- The URL construction could be hardened by applying `encodeURIComponent()` to `integrationId` and `sku`. A configurable API host could also support different environments, but a fixed production host is reasonable for a lightweight client widget, so I would not treat the `const endpoint` declaration as a finding by itself.
 
 ### Loader snippet: [jewel-loader.js](snippets/jewel-loader.js)
 
+- The no-framework, vanilla-JavaScript approach is appropriate for an embedded bundle with an explicit bundle-size constraint on the client's critical path.
 - The loader is small and self-contained: its immediately invoked function avoids leaking temporary variables into the global scope; see [lines 4-7](snippets/jewel-loader.js#L4-L7).
 - Waiting for the external script's `load` event before calling `mountCompleteTheLook` establishes the necessary script ordering. Deriving the SKU from the current path also keeps the snippet configuration light; see [lines 9-12](snippets/jewel-loader.js#L9-L12). The integration ID still needs to come from client-specific configuration, as noted above.
 
@@ -96,4 +98,4 @@ See the hardcoded value in [jewel-loader.js](snippets/jewel-loader.js#L12).
 
 I used Claude Code to review the three files, identify issues, refine the wording, and format this document. My initial review caught most of the TypeScript concerns, including the synchronous XHR, unhandled response parsing, unsafe HTML interpolation, and browser-side email logging. Claude Code additionally surfaced the accumulating `popstate` listeners, the hardcoded `victorias-secret` integration ID, and the implications of using synchronous PyMongo calls inside an `async def` endpoint. It also helped clarify the missing-anchor failure and the need to validate and bound the query limit.
 
-I reviewed and edited each suggested finding rather than accepting the output unchanged. In particular, I kept the server-side `shopper_id` logging as a conditional privacy consideration, pushing back on treating it as automatically unacceptable: it may be appropriate for operations when supported by the applicable privacy, retention, access-control, and consent requirements. After pushing the changes, I also verified that the README renders correctly on GitHub.
+I reviewed and edited each suggested finding rather than accepting the output unchanged. In particular, I kept the server-side `shopper_id` logging as a conditional privacy consideration, pushing back on treating it as automatically unacceptable: it may be appropriate for operations when supported by the applicable privacy, retention, access-control, and consent requirements. After pushing the changes, I also verified that the README renders correctly on GitHub. I also caught a few places where it moved something to the wrong part of the README and fixed that up before sending this out.
